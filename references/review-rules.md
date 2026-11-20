@@ -40,6 +40,17 @@ FeatureName/
 - Do not move a type into a shared folder merely because another feature might use it someday.
 - Flag parallel folders that split one VC's implementation across unrelated global `View`, `ViewModel`, and `Model` trees.
 
+## UIKit lifecycle and memory
+
+- A task started by a ViewController must have an owner and cancellation point. Check dismissal, pop, replacement, and deinitialization paths.
+- Flag task results that can update a VC after it leaves the hierarchy or overwrite newer state after a second request starts.
+- Long-lived tasks stored by a VC should be cancelled during the lifecycle event that ends their usefulness; do not assume deinit happens promptly.
+- Closures, Combine subscriptions, RxSwift chains, timers, notifications, delegates, and child-controller callbacks must not create a VC retain cycle.
+- Table and collection view cells must cancel or identify async work during reuse so an old result cannot render into a new item.
+- Repeated lifecycle entry must not create duplicate observers, subscriptions, timers, constraints, or requests.
+- UI state changes must remain on the main actor even when callbacks originate from frameworks with unspecified queues.
+- Loading, empty, error, and retry states must remain coherent when requests are cancelled, overlap, fail, or complete out of order.
+
 ## Required DESIGN.md
 
 Every VC feature directory must contain a maintained `DESIGN.md` covering:
@@ -67,6 +78,14 @@ The document describes decisions and contracts, not line-by-line implementation.
 ## Tests
 
 - New ViewModel behavior needs tests for success, validation failure, dependency failure, cancellation, stale responses, and state transitions that matter to the UI.
-- Concurrency-sensitive code needs deterministic tests; do not accept timing-based sleeps as synchronization.
+- Concurrency-sensitive code needs deterministic tests; do not accept fixed sleeps, arbitrary delays, or polling as synchronization.
+- Test overlapping requests so an older response cannot overwrite a newer state.
+- Test cancellation during loading and confirm cancelled work does not publish success or error UI afterward.
+- Test repeated taps, repeated lifecycle entry, and retry so duplicate work, observers, subscriptions, and state transitions are exposed.
+- Test cell or reusable-view async work with reuse or identity changes when the feature performs asynchronous rendering.
+- Repository behavior should use an in-memory persistence store or focused integration boundary when practical, including create, update, delete, ordering, and failure behavior.
+- Callback and continuation bridges need tests for success, failure, cancellation, and protection against multiple completion attempts.
 - Tests should exercise observable behavior with real value types and focused fakes, not assert that mocks were called without checking the resulting state.
 - A `DESIGN.md` test plan is not a substitute for executable tests.
+
+Flag missing tests only when a concrete behavior or failure mode would otherwise be unprotected. Do not request tests for trivial accessors, framework behavior, or source-code text.
