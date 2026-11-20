@@ -1,0 +1,4 @@
+interface:
+  display_name: "Swift VC Code Review"
+  short_description: "Review Swift Concurrency and VC feature structure"
+  default_prompt: "Review this iOS change for Swift Concurrency safety, VC-centered folder structure, documentation, and tests."
